@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Device		   : 7 Series
+// Device		  : 7 Series
 // Design Name	  : DDR3 SDRAM
 // Purpose		  :
 //   Wrapper module for the user design top level file. This module can be 
@@ -13,10 +13,12 @@
 `timescale 1ps/1ps
 
 module ExternalMemory (
+
 	// Inouts
 	inout [15:0] ddr3_dq,
 	inout [1:0] ddr3_dqs_n,
 	inout [1:0] ddr3_dqs_p,
+	
 	// Outputs
 	output [13:0] ddr3_addr,
 	output [2:0] ddr3_ba,
@@ -30,12 +32,13 @@ module ExternalMemory (
 	output [0:0] ddr3_cs_n,
 	output [1:0] ddr3_dm,
 	output [0:0] ddr3_odt,
+	
 	// Inputs
-	// Single-ended system clock
-	input sys_clk_i,
-	// Single-ended iodelayctrl clk (reference clock)
-	input clk_ref_i,
-	// user interface signals
+	input sys_clk_i, // Single-ended system clock
+	input clk_ref_i, // Single-ended iodelayctrl clk (reference clock)
+	input sys_rst,
+
+	// User Interface Inputs and Outputs
 	input app_addr,
 	input app_cmd,
 	input app_en,
@@ -43,29 +46,32 @@ module ExternalMemory (
 	input app_wdf_end,
 	input [15:0] app_wdf_mask,
 	input app_wdf_wren,
+	input app_sr_req,
+	input app_ref_req,
+	input app_zq_req,
+
 	output [127:0] app_rd_data,
 	output app_rd_data_end,
 	output app_rd_data_valid,
 	output app_rdy,
 	output app_wdf_rdy,
-	input app_sr_req,
-	input app_ref_req,
-	input app_zq_req,
 	output app_sr_active,
 	output app_ref_ack,
 	output app_zq_ack,
 	output ui_clk,
 	output ui_clk_sync_rst,
 	output init_calib_complete,
-	output [11:0] device_temp,
-`ifdef SKIP_CALIB
-	output   calib_tap_req,
+	output [11:0] device_temp
+	
+`ifdef SKIP_CALIB // Calibration
+	,
 	input calib_tap_load,
 	input calib_tap_addr,
 	input calib_tap_val,
 	input calib_tap_load_done,
+	output calib_tap_req //45
 `endif
-	input sys_rst
+
 	);
 
 	// Start of IP top instance
@@ -115,14 +121,16 @@ module ExternalMemory (
 		// Reference Clock Ports
 		.clk_ref_i(clk_ref_i),
 		.device_temp(device_temp),
+		.sys_rst(sys_rst)
+
 `ifdef SKIP_CALIB
+		,
 		.calib_tap_req(calib_tap_req),
 		.calib_tap_load(calib_tap_load),
 		.calib_tap_addr(calib_tap_addr),
 		.calib_tap_val(calib_tap_val),
-		.calib_tap_load_done(calib_tap_load_done),
+		.calib_tap_load_done(calib_tap_load_done)
 `endif
-		.sys_rst(sys_rst)
 	);
 // End of IP top instance
 

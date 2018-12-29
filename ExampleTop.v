@@ -133,11 +133,8 @@ module example_top #(
 	output [0:0] ddr3_ck_p,
 	output [0:0] ddr3_ck_n,
 	output [0:0] ddr3_cke,
-	
 	output [0:0] ddr3_cs_n,
-	
 	output [1:0] ddr3_dm,
-	
 	output [0:0] ddr3_odt,
 	
 	// Inputs
@@ -159,7 +156,7 @@ module example_top #(
 	begin
 		size = size - 1;
 		for (clogb2 = 1; size > 1; clogb2 = clogb2 + 1)
-		size = size >> 1;
+			size = size >> 1;
 	end
 	endfunction /*clogb2*/
 
@@ -192,21 +189,23 @@ module example_top #(
 	// Wire declarations
 	wire [(2*nCK_PER_CLK)-1:0] app_ecc_multiple_err;
 	wire [(2*nCK_PER_CLK)-1:0] app_ecc_single_err;
+
 	wire [ADDR_WIDTH-1:0] app_addr;
 	wire [2:0] app_cmd;
 	wire app_en;
-	wire app_rdy;
+	wire [APP_DATA_WIDTH-1:0] app_wdf_data;
+	wire app_wdf_end;
+	wire app_wdf_wren;
 	wire [APP_DATA_WIDTH-1:0] app_rd_data;
 	wire app_rd_data_end;
 	wire app_rd_data_valid;
-	wire [APP_DATA_WIDTH-1:0] app_wdf_data;
-	wire app_wdf_end;
-	wire [APP_MASK_WIDTH-1:0] app_wdf_mask;
+	wire app_rdy;
 	wire app_wdf_rdy;
 	wire app_sr_active;
 	wire app_ref_ack;
 	wire app_zq_ack;
-	wire app_wdf_wren;
+	wire [APP_MASK_WIDTH-1:0] app_wdf_mask;
+
 	wire [(64+(2*APP_DATA_WIDTH))-1:0] error_status;
 	wire [(PAYLOAD_WIDTH/8)-1:0] cumlative_dq_lane_error;
 	wire mem_pattern_init_done;
@@ -275,19 +274,19 @@ module example_top #(
 	ExternalMemory _ExternalMemory
 	(
 		// Memory interface ports
-		.ddr3_addr(ddr3_addr),
-		.ddr3_ba(ddr3_ba),
-		.ddr3_cas_n(ddr3_cas_n),
-		.ddr3_ck_n(ddr3_ck_n),
-		.ddr3_ck_p(ddr3_ck_p),
-		.ddr3_cke(ddr3_cke),
-		.ddr3_ras_n(ddr3_ras_n),
-		.ddr3_we_n(ddr3_we_n),
 		.ddr3_dq(ddr3_dq),
 		.ddr3_dqs_n(ddr3_dqs_n),
 		.ddr3_dqs_p(ddr3_dqs_p),
+
+		.ddr3_addr(ddr3_addr),
+		.ddr3_ba(ddr3_ba),
+		.ddr3_ras_n(ddr3_ras_n),
+		.ddr3_cas_n(ddr3_cas_n),
+		.ddr3_we_n(ddr3_we_n),
 		.ddr3_reset_n(ddr3_reset_n),
-		.init_calib_complete(init_calib_complete),
+		.ddr3_ck_p(ddr3_ck_p),
+		.ddr3_ck_n(ddr3_ck_n),
+		.ddr3_cke(ddr3_cke),
 		.ddr3_cs_n(ddr3_cs_n),
 		.ddr3_dm(ddr3_dm),
 		.ddr3_odt(ddr3_odt),
@@ -298,21 +297,23 @@ module example_top #(
 		.app_en(app_en),
 		.app_wdf_data(app_wdf_data),
 		.app_wdf_end(app_wdf_end),
+		.app_wdf_mask(app_wdf_mask),
 		.app_wdf_wren(app_wdf_wren),
+		.app_sr_req(1'b0),
+		.app_ref_req(1'b0),
+		.app_zq_req(1'b0),
+
 		.app_rd_data(app_rd_data),
 		.app_rd_data_end(app_rd_data_end),
 		.app_rd_data_valid(app_rd_data_valid),
 		.app_rdy(app_rdy),
 		.app_wdf_rdy(app_wdf_rdy),
-		.app_sr_req(1'b0),
-		.app_ref_req(1'b0),
-		.app_zq_req(1'b0),
 		.app_sr_active(app_sr_active),
 		.app_ref_ack(app_ref_ack),
 		.app_zq_ack(app_zq_ack),
 		.ui_clk(clk),
 		.ui_clk_sync_rst(rst),
-		.app_wdf_mask(app_wdf_mask),
+		.init_calib_complete(init_calib_complete),
 
 		// System Clock Ports
 		.sys_clk_i(sys_clk_i),
@@ -374,21 +375,25 @@ module example_top #(
 		.tg_only_rst(po_win_tg_rst | vio_tg_rst),
 		.manual_clear_error(manual_clear_error),
 		.memc_init_done(init_calib_complete),
-		.memc_cmd_full(~app_rdy),
-		.memc_cmd_en(app_en),
-		.memc_cmd_instr(app_cmd),
-		.memc_cmd_bl(),
+
 		.memc_cmd_addr(app_addr),
-		.memc_wr_en(app_wdf_wren),
+		.memc_cmd_instr(app_cmd),
+		.memc_cmd_en(app_en),
+		.memc_wr_data(app_wdf_data),
 		.memc_wr_end(app_wdf_end),
 		.memc_wr_mask(app_wdf_mask),
-		.memc_wr_data(app_wdf_data),
-		.memc_wr_full(~app_wdf_rdy),
-		.memc_rd_en(),
+		.memc_wr_en(app_wdf_wren),
+
 		.memc_rd_data(app_rd_data),
 		.memc_rd_empty(~app_rd_data_valid),
+		.memc_cmd_full(~app_rdy),
+		.memc_wr_full(~app_wdf_rdy),
+
+		.memc_cmd_bl(),
+		.memc_rd_en(),
 		.qdr_wr_cmd_o(),
 		.qdr_rd_cmd_o(),
+
 		.vio_pause_traffic(vio_pause_traffic),
 		.vio_modify_enable(vio_modify_enable),
 		.vio_data_mode_value(vio_data_mode_value),
@@ -398,6 +403,7 @@ module example_top #(
 		.vio_fixed_bl_value(vio_fixed_bl_value),
 		.vio_fixed_instr_value(vio_fixed_instr_value),
 		.vio_data_mask_gen(vio_data_mask_gen),
+
 		.fixed_addr_i(32'b0),
 		.fixed_data_i(32'b0),
 		.simple_data0(32'b0),
