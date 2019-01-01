@@ -1,3 +1,8 @@
+// The example of testing external memory in/out.
+// If the green light is turned on, it means that the data which transmit to and receive from the memory are same.
+// The red light is the opposite.
+// And the blue light is turned on when the calibration of the memory is complete.
+
 // `define SKIP_CALIB
 
 `timescale 1ps/1ps
@@ -157,6 +162,7 @@ module main # (
 
 	localparam CMD_WRITE = 3'b000;
 	localparam CMD_READ = 3'b001;
+	localparam CMD_NONE = 3'bz; // This is just my opinion.
 
 	assign led_calib = init_calib_complete;
 
